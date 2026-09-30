@@ -1,0 +1,9 @@
+package product
+import("context";"errors")
+var ErrNotFound=errors.New("product not found")
+type Product struct{ProductID string `json:"productId"`;Name string `json:"name"`;SKU string `json:"sku"`;Status string `json:"status"`;TaxCategory string `json:"taxCategory"`}
+type Repository interface{Find(context.Context,string,string)(Product,error)}
+type Service struct{repo Repository}; func NewService(r Repository)Service{return Service{r}}; func(s Service)Get(ctx context.Context,id,market string)(Product,error){if id==""||(market!="MX"&&market!="CO"&&market!="PE"){return Product{},errors.New("invalid product id or market")};return s.repo.Find(ctx,id,market)}
+type MemoryRepository struct{data map[string]Product}
+func NewMemoryRepository()*MemoryRepository{rows:=[]struct{m string;p Product}{{"MX",Product{"PRD-001","Bebida 600 ml","BEB-600-PET","ACTIVE","STANDARD"}},{"MX",Product{"PRD-008","Caja de cereal","CER-001","ACTIVE","REDUCED"}},{"MX",Product{"PRD-009","Producto legado","LEG-009","DISCONTINUED","STANDARD"}},{"MX",Product{"PRD-010","Agua","AGU-001","ACTIVE","EXEMPT"}},{"CO",Product{"PRD-101","Cafe","CAF-101","ACTIVE","STANDARD"}},{"CO",Product{"PRD-102","Leche","LEC-102","ACTIVE","REDUCED"}},{"CO",Product{"PRD-103","Libro","LIB-103","ACTIVE","EXEMPT"}},{"PE",Product{"PRD-201","Cacao","CAC-201","ACTIVE","STANDARD"}},{"PE",Product{"PRD-202","Arroz","ARR-202","ACTIVE","REDUCED"}},{"PE",Product{"PRD-203","Medicamento","MED-203","ACTIVE","EXEMPT"}}};data:=map[string]Product{};for _,x:=range rows{data[x.m+":"+x.p.ProductID]=x.p};return &MemoryRepository{data}}
+func(r *MemoryRepository)Find(ctx context.Context,id,market string)(Product,error){select{case<-ctx.Done():return Product{},ctx.Err();default:};p,ok:=r.data[market+":"+id];if !ok{return Product{},ErrNotFound};return p,nil}

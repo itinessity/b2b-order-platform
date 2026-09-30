@@ -1,0 +1,10 @@
+server.port: 8080
+spring:
+  application.name: order-processor
+  threads.virtual.enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer: { group-id: order-processor-v1, enable-auto-commit: false, auto-offset-reset: earliest }
+    listener.ack-mode: manual_immediate
+  data.mongodb.uri: ${MONGODB_URI:mongodb://localhost:27017/orders}
+management.endpoints.web.exposure.include: health,info,metrics

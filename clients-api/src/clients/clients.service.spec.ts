@@ -1,0 +1,1 @@
+import {ClientsService,MemoryClientsRepository} from './clients.service'; describe('ClientsService',()=>{const s=new ClientsService(new MemoryClientsRepository());it('returns a seeded client',()=>expect(s.get('CLI-99821')?.market).toBe('MX'));it('returns undefined when absent',()=>expect(s.get('CLI-99999')).toBeUndefined());});

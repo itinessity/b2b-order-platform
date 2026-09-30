@@ -1,0 +1,63 @@
+services:
+  kafka:
+    image: bitnami/kafka:3.7
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:9093,EXTERNAL://:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports: ["9092:9092"]
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:29092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  mongodb:
+    image: mongo:7
+    ports: ["27017:27017"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  products-api:
+    build: ./products-api
+    ports: ["8081:8081"]
+  clients-api:
+    build: ./clients-api
+    ports: ["3001:3001"]
+  order-processor:
+    build: ./order-processor
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      MONGODB_URI: mongodb://mongodb:27017/orders
+      PRODUCTS_BASE_URL: http://products-api:8081
+      CLIENTS_BASE_URL: http://clients-api:3001
+    ports: ["8080:8080"]
+    depends_on:
+      kafka: { condition: service_healthy }
+      mongodb: { condition: service_healthy }
+      products-api: { condition: service_started }
+      clients-api: { condition: service_started }
+  order-processor-tests:
+    profiles: ["test"]
+    image: maven:3.9-eclipse-temurin-21
+    working_dir: /src
+    volumes: ["./order-processor:/src"]
+    command: mvn test
+  products-api-tests:
+    profiles: ["test"]
+    image: golang:1.22
+    working_dir: /src
+    volumes: ["./products-api:/src"]
+    command: go test ./...
+  clients-api-tests:
+    profiles: ["test"]
+    image: node:22-alpine
+    working_dir: /src
+    volumes: ["./clients-api:/src"]
+    command: sh -c "corepack enable && corepack prepare pnpm@9.15.9 --activate && pnpm install --frozen-lockfile=false && pnpm test && pnpm build"

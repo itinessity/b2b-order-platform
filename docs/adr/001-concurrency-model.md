@@ -1,0 +1,2 @@
+# ADR 001: Virtual threads and database-enforced idempotency
+Context: processing is I/O-heavy and duplicate delivery is expected. Alternatives were reactive pipelines, fixed pools and virtual threads. Decision: use linear blocking orchestration on Java 21 virtual threads, key Kafka by `orderId`, and enforce uniqueness/version invariants in MongoDB. Consequence: incident traces stay simple; deadlines and connection bulkheads remain mandatory. Revisit if profiling shows scheduling or pool contention.

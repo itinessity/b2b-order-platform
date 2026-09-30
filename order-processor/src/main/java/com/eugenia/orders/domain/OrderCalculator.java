@@ -1,0 +1,9 @@
+package com.eugenia.orders.domain;
+import java.math.*; import java.util.*; import static com.eugenia.orders.domain.OrderModels.*;
+public final class OrderCalculator {
+ private static final BigDecimal DISCOUNT=new BigDecimal("0.03");
+ public Calculation calculate(Market market,TaxRegime regime,Segment segment,List<Item> items){if(items==null||items.isEmpty())throw new IllegalArgumentException("items must not be empty"); var lines=items.stream().map(i->line(market,regime,segment,i)).toList(); return new Calculation(lines,new Totals(sum(lines,Line::grossSubtotal),sum(lines,Line::discount),sum(lines,Line::netSubtotal),sum(lines,Line::tax),sum(lines,Line::total)));}
+ private Line line(Market market,TaxRegime regime,Segment segment,Item i){if(i.quantity()<=0||i.unitPrice()==null||i.unitPrice().signum()<0)throw new IllegalArgumentException("invalid item"); var gross=money(i.unitPrice().multiply(BigDecimal.valueOf(i.quantity()))); var rate=segment==Segment.WHOLESALE&&i.quantity()>=20?DISCOUNT:BigDecimal.ZERO; var discount=money(gross.multiply(rate)); var net=money(gross.subtract(discount)); var tax=money(net.multiply(taxRate(market,regime,i.taxCategory()))); return new Line(i.productId(),i.quantity(),money(i.unitPrice()),gross,discount,net,tax,money(net.add(tax)));}
+ public BigDecimal taxRate(Market m,TaxRegime r,TaxCategory c){if(r==TaxRegime.EXEMPT||c==TaxCategory.EXEMPT)return BigDecimal.ZERO; return switch(m){case MX->c==TaxCategory.STANDARD?new BigDecimal("0.16"):new BigDecimal("0.08"); case CO->c==TaxCategory.STANDARD?new BigDecimal("0.19"):new BigDecimal("0.05"); case PE->c==TaxCategory.STANDARD?new BigDecimal("0.18"):new BigDecimal("0.10");};}
+ private BigDecimal sum(List<Line> lines,java.util.function.Function<Line,BigDecimal> f){return money(lines.stream().map(f).reduce(BigDecimal.ZERO,BigDecimal::add));} private BigDecimal money(BigDecimal v){return v.setScale(2,RoundingMode.HALF_UP);}
+}

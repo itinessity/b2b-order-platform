@@ -1,0 +1,3 @@
+package com.eugenia.orders.domain;
+import java.util.*; import static com.eugenia.orders.domain.OrderModels.*;
+public final class EligibilityPolicy { public Optional<String> rejectionReason(Market market,Client client,List<Product> products){if(client==null)return Optional.of("CLIENT_NOT_FOUND"); if(!client.active())return Optional.of("CLIENT_BLOCKED"); if(client.market()!=market)return Optional.of("CLIENT_MARKET_MISMATCH"); if(products.stream().anyMatch(Objects::isNull))return Optional.of("PRODUCT_NOT_FOUND"); if(products.stream().anyMatch(p->!p.active()))return Optional.of("PRODUCT_INACTIVE"); return Optional.empty();} }

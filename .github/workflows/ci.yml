@@ -1,0 +1,12 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  java:
+    runs-on: ubuntu-latest
+    steps: [{uses: actions/checkout@v4}, {uses: actions/setup-java@v4, with: {distribution: temurin, java-version: '21', cache: maven}}, {run: mvn -f order-processor/pom.xml test}]
+  go:
+    runs-on: ubuntu-latest
+    steps: [{uses: actions/checkout@v4}, {uses: actions/setup-go@v5, with: {go-version: '1.22'}}, {run: cd products-api && go test ./...}]
+  nest:
+    runs-on: ubuntu-latest
+    steps: [{uses: actions/checkout@v4}, {uses: pnpm/action-setup@v4, with: {version: 9}}, {uses: actions/setup-node@v4, with: {node-version: '22'}}, {run: cd clients-api && pnpm install --frozen-lockfile=false && pnpm test && pnpm build}]

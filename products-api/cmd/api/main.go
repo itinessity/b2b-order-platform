@@ -1,0 +1,3 @@
+package main
+import("context";"log/slog";"net/http";"os";"os/signal";"syscall";"time";"github.com/itinessity/b2b-order-platform/products-api/internal/product")
+func main(){h:=product.NewHandler(product.NewService(product.NewMemoryRepository()));s:=&http.Server{Addr:":8081",Handler:h.Routes(),ReadHeaderTimeout:2*time.Second};go func(){slog.Info("products-api started","port",8081);if e:=s.ListenAndServe();e!=nil&&e!=http.ErrServerClosed{panic(e)}}();ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM);defer stop();<-ctx.Done();shutdown,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel();_=s.Shutdown(shutdown)}

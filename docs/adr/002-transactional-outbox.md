@@ -1,0 +1,2 @@
+# ADR 002: MongoDB transactional outbox
+Context: separate save and publish steps create dual-write gaps. Alternatives were publish-first, save-first, Kafka transactions, CDC and outbox. Decision: commit order and outbox together; publish asynchronously and mark delivered after broker acknowledgement. Consequence: no durable order loses publication intent, but relay delivery is at-least-once and consumers deduplicate. Revisit when a platform CDC connector becomes standard.

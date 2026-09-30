@@ -83,3 +83,6 @@ Provider APIs accept `X-Failure-Mode: transient|permanent|timeout` in non-produc
 
 The implementation intentionally omits Flutter, Schema Registry, distributed tracing, authentication, and a production outbox change-stream connector. The included polling relay is suitable for this bounded exercise; production rollout should add tracing, contract publication, secrets management, and broker-level alerting.
 
+## AI assistance disclosure
+
+The use, scope, validation process, and review of AI assistance are documented in [ADR 003: AI assistance](docs/adr/003-ai-assistance.md).
